@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import { useActiveUser } from "@/lib/ActiveUserContext";
 import { Link, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
@@ -165,6 +166,12 @@ export default function Layout({ children, currentPageName }) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const navigate = useNavigate();
   const tabHistories = useRef({});
+  const { clearUser } = useActiveUser();
+
+  const handleLogout = () => {
+    clearUser();
+    base44.auth.logout();
+  };
 
   const navigateTab = useCallback((page) => {
     if (!tabHistories.current[page]) tabHistories.current[page] = [];
@@ -289,7 +296,7 @@ export default function Layout({ children, currentPageName }) {
               {/* Logout + Delete Account */}
               <div className="mt-2 pt-2 border-t border-sidebar-accent space-y-1">
                 <button
-                  onClick={() => { base44.auth.logout(); setMobileOpen(false); }}
+                  onClick={() => { handleLogout(); setMobileOpen(false); }}
                   style={noSelectStyle}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent transition-colors min-h-[44px]"
                 >
@@ -365,7 +372,7 @@ export default function Layout({ children, currentPageName }) {
             Driver Signup
           </Link>
           <button
-            onClick={() => base44.auth.logout()}
+            onClick={() => handleLogout()}
             style={noSelectStyle}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent transition-colors border-t border-sidebar-accent pt-4 min-h-[44px]"
           >
@@ -426,7 +433,13 @@ export default function Layout({ children, currentPageName }) {
           return (
             <button
               key={item.page}
-              onClick={() => !active && navigateTab(item.page)}
+              onClick={() => {
+                if (active) {
+                  navigate(`/${item.page}`);
+                } else {
+                  navigateTab(item.page);
+                }
+              }}
               style={noSelectStyle}
               className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] transition-colors ${
                 active ? "text-primary" : "text-sidebar-foreground/60"
